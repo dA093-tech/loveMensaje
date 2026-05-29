@@ -1,0 +1,8 @@
+{
+  "name": "hooklove-functions",
+  "description": "Cloud Functions for HookLove",
+  "main": "src/index.js",
+  "engines": {
+    "node": "22"
+  }
+}
