@@ -6,9 +6,10 @@
     "source": "functions",
     "runtime": "nodejs22"
   },
-  "firebase": {
-    "database": {
-      "rules": "database.rules.json"
-    }
+  "database": {
+    "rules": "database.rules.json"
+  },
+  "firestore": {
+    "rules": "firestore.rules"
   }
 }
