@@ -1,0 +1,10 @@
+{
+  "flutter": {
+    "platforms": ["android"]
+  },
+  "firebase": {
+    "database": {
+      "rules": "database.rules.json"
+    }
+  }
+}

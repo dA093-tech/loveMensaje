@@ -1,0 +1,21 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "drawings": {
+      "$pairId": {
+        ".read": "auth != null",
+        ".write": "auth.uid == root.child('pairs').child($pairId).child('user1Id').val() || auth.uid == root.child('pairs').child($pairId).child('user2Id').val()",
+        "strokes": {
+          ".indexOn": ["timestamp", "userId"]
+        },
+        "presence": {
+          "$userId": {
+            ".read": "auth.uid == $userId",
+            ".write": "auth.uid == $userId"
+          }
+        }
+      }
+    }
+  }
+}

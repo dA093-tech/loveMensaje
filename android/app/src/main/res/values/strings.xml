@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HookLove</string>
+    <string name="drawing_channel_name">Dibujo en vivo</string>
+    <string name="drawing_channel_desc">Notificaciones cuando tu pareja dibuja</string>
+    <string name="foreground_channel_name">HookLove activo</string>
+    <string name="foreground_channel_desc">Mantiene la conexión activa con tu pareja</string>
+    <string name="quick_draw_text">Toca para dibujar</string>
+    <string name="partner_drawing_text">Tu pareja está dibujando</string>
+</resources>
