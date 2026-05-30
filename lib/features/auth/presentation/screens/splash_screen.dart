@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooklove/core/constants/app_constants.dart';
 import 'package:hooklove/core/theme/app_colors.dart';
 import 'package:hooklove/core/theme/app_typography.dart';
+import 'package:hooklove/core/update/update_providers.dart';
+import 'package:hooklove/core/update/update_service.dart';
 import 'package:hooklove/features/auth/presentation/providers/auth_providers.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -17,6 +22,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeIn;
   late Animation<double> _scale;
+
+  Timer? _timeoutTimer;
 
   @override
   void initState() {
@@ -35,10 +42,84 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
 
     _controller.forward();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+    _timeoutTimer = Timer(const Duration(seconds: 6), _onTimeout);
+  }
+
+  Future<void> _checkForUpdate() async {
+    final service = ref.read(updateServiceProvider);
+    final update = await service.checkForUpdate();
+    if (update != null && mounted) {
+      _showUpdateDialog(update);
+    }
+  }
+
+  void _showUpdateDialog(UpdateInfo info) {
+    showDialog(
+      context: context,
+      barrierDismissible: !info.forceUpdate,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Actualización disponible'),
+        content: Text(
+          'Versión ${info.latestVersion} disponible.\n'
+          'Tu versión actual: ${AppConstants.appVersion}',
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          if (!info.forceUpdate)
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Ahora no'),
+            ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await _performUpdate(info.apkUrl);
+            },
+            child: const Text('Actualizar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performUpdate(String url) async {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Descargando actualización...'),
+        duration: Duration(minutes: 2),
+      ),
+    );
+
+    try {
+      final service = ref.read(updateServiceProvider);
+      final filePath = await service.downloadApk(url);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      await service.installApk(filePath);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al actualizar: $e')),
+      );
+    }
+  }
+
+  void _onTimeout() {
+    if (!mounted) return;
+    final authState = ref.read(authStateProvider);
+    if (authState.valueOrNull == null) {
+      context.go('/login');
+    }
   }
 
   @override
   void dispose() {
+    _timeoutTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }

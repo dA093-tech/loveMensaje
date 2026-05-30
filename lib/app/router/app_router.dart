@@ -22,16 +22,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation.startsWith('/register');
       final isOnboarding = state.matchedLocation.startsWith('/pair');
 
-      if (isSplash) return null;
+      if (isSplash && authState.isLoading) return null;
 
-      if (!isLoggedIn && !isAuth) return '/login';
-      if (isLoggedIn && isAuth) return '/home';
-
-      if (isLoggedIn) {
-        final hasPartner = authState.valueOrNull?.partnerId != null;
-        if (!hasPartner && !isOnboarding && !isSplash) return '/pair';
-        if (hasPartner && isOnboarding) return '/home';
+      if (!isLoggedIn) {
+        if (isAuth) return null;
+        return '/login';
       }
+
+      if (isAuth) return '/home';
+
+      final hasPartner = authState.valueOrNull?.partnerId != null;
+      if (!hasPartner && !isOnboarding) return '/pair';
+      if (hasPartner && (isOnboarding || isSplash)) return '/home';
 
       return null;
     },

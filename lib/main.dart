@@ -5,7 +5,6 @@ import 'package:hooklove/app/app.dart';
 import 'package:hooklove/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:hooklove/features/notifications/notification_handler.dart';
-import 'package:hooklove/features/notifications/notification_providers.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

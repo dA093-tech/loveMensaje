@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooklove/core/theme/app_colors.dart';
 import 'package:hooklove/features/drawing/domain/canvas_state.dart';
+import 'package:hooklove/features/drawing/domain/stroke.dart';
 
 class DrawingToolbar extends StatelessWidget {
   final CanvasState state;
@@ -19,7 +20,7 @@ class DrawingToolbar extends StatelessWidget {
     required this.onColorChanged,
     required this.onWidthChanged,
     required this.onToolChanged,
-    VoidCallback? onToggleToolbar,
+    this.onToggleToolbar,
   });
 
   @override

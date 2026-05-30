@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:hooklove/core/constants/app_constants.dart';
 import 'package:hooklove/features/drawing/domain/drawing_repository.dart';
+import 'package:hooklove/features/drawing/domain/incoming_drawing.dart';
 import 'package:hooklove/features/drawing/domain/stroke.dart';
 
 class DrawingRepositoryImpl implements DrawingRepository {
@@ -15,6 +16,9 @@ class DrawingRepositoryImpl implements DrawingRepository {
 
   DatabaseReference _presenceRef(String pairId) =>
       _rtdb.ref('${AppConstants.rtdbRoot}/$pairId/presence');
+
+  DatabaseReference _incomingRef(String pairId) =>
+      _rtdb.ref('${AppConstants.rtdbRoot}/$pairId/incoming');
 
   @override
   Stream<List<Stroke>> watchStrokes(String pairId) {
@@ -53,7 +57,11 @@ class DrawingRepositoryImpl implements DrawingRepository {
 
   @override
   Future<void> addStroke(String pairId, Stroke stroke) async {
-    await _strokesRef(pairId).child(stroke.id).set(stroke.toMap());
+    final data = stroke.toMap()..remove('points');
+    await _strokesRef(pairId).child(stroke.id).set(data);
+    for (final point in stroke.points) {
+      await addStrokePoint(pairId, stroke.id, point);
+    }
   }
 
   @override
@@ -95,5 +103,45 @@ class DrawingRepositoryImpl implements DrawingRepository {
     }
     strokes.sort((a, b) => a.timestamp.compareTo(b.timestamp));
     return strokes;
+  }
+
+  @override
+  Future<void> sendDrawing(String pairId, String fromUserId, List<Stroke> strokes) async {
+    final drawing = IncomingDrawing(
+      id: '',
+      fromUserId: fromUserId,
+      strokes: strokes,
+      timestamp: DateTime.now(),
+    );
+    await _incomingRef(pairId).push().set(drawing.toMap());
+  }
+
+  @override
+  Stream<IncomingDrawing> watchIncomingDrawings(String pairId) {
+    final controller = StreamController<IncomingDrawing>.broadcast();
+    final seenIds = <String>{};
+
+    final listener = _incomingRef(pairId).onChildAdded.listen((event) {
+      final id = event.snapshot.key ?? '';
+      if (!seenIds.contains(id)) {
+        seenIds.add(id);
+        final drawing = IncomingDrawing.fromMap(
+          id,
+          Map<String, dynamic>.from(event.snapshot.value as Map),
+        );
+        controller.add(drawing);
+      }
+    });
+
+    controller.onCancel = () {
+      listener.cancel();
+    };
+
+    return controller.stream;
+  }
+
+  @override
+  Future<void> acknowledgeIncomingDrawing(String pairId, String drawingId) async {
+    await _incomingRef(pairId).child(drawingId).remove();
   }
 }

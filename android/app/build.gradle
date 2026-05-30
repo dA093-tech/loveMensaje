@@ -23,7 +23,7 @@ if (flutterVersionName == null) {
 
 android {
     namespace = "com.hooklove.app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -38,7 +38,7 @@ android {
     defaultConfig {
         applicationId = "com.hooklove.app"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
     }
@@ -63,6 +63,11 @@ android {
             )
         }
     }
+}
+
+dependencies {
+    implementation platform("com.google.firebase:firebase-bom:34.14.0")
+    implementation "com.google.firebase:firebase-common"
 }
 
 flutter {

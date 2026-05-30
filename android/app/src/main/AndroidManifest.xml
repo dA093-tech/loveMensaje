@@ -15,14 +15,14 @@
         android:name=".HookLoveApplication"
         android:label="HookLove"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.HookLove"
         android:enableOnBackInvokedCallback="true"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
-        tools:targetApi="35">
+        tools:targetApi="36">
 
         <activity
             android:name=".MainActivity"
@@ -56,5 +56,9 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="hooklove_drawing" />
+
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
     </application>
 </manifest>

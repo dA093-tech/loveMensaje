@@ -19,6 +19,10 @@ class HapticUtil {
     HapticFeedback.selectionClick();
   }
 
+  static void success() {
+    HapticFeedback.heavyImpact();
+  }
+
   static void notificationSuccess() {
     HapticFeedback.heavyImpact();
   }

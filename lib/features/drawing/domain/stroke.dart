@@ -53,19 +53,31 @@ class Stroke {
         'deleted': deleted,
       };
 
-  factory Stroke.fromMap(String id, Map<String, dynamic> map) => Stroke(
-        id: id,
-        userId: map['userId'] as String? ?? '',
-        tool: map['tool'] == 'eraser' ? Tool.eraser : Tool.pen,
-        color: map['color'] as int? ?? 0xFFFFFFFF,
-        width: (map['width'] as num?)?.toDouble() ?? 3.0,
-        points: (map['points'] as List<dynamic>?)
-                ?.map((p) => Map<String, double>.from(p as Map))
-                .toList() ??
-            [],
-        timestamp: map['timestamp'] != null
-            ? DateTime.fromMillisecondsSinceEpoch(map['timestamp'] as int)
-            : DateTime.now(),
-        deleted: map['deleted'] as bool? ?? false,
-      );
+  factory Stroke.fromMap(String id, Map<String, dynamic> map) {
+    List<Map<String, double>> points;
+    final rawPoints = map['points'];
+    if (rawPoints is List) {
+      points = rawPoints.map((p) => Map<String, double>.from(p as Map)).toList();
+    } else if (rawPoints is Map) {
+      points = (rawPoints as Map<String, dynamic>)
+          .values
+          .map((p) => Map<String, double>.from(p as Map))
+          .toList();
+    } else {
+      points = [];
+    }
+
+    return Stroke(
+      id: id,
+      userId: map['userId'] as String? ?? '',
+      tool: map['tool'] == 'eraser' ? Tool.eraser : Tool.pen,
+      color: map['color'] as int? ?? 0xFFFFFFFF,
+      width: (map['width'] as num?)?.toDouble() ?? 3.0,
+      points: points,
+      timestamp: map['timestamp'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['timestamp'] as int)
+          : DateTime.now(),
+      deleted: map['deleted'] as bool? ?? false,
+    );
+  }
 }

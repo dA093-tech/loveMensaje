@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hooklove/core/constants/app_constants.dart';
-import 'package:hooklove/core/utils/stroke_compressor.dart';
 import 'package:hooklove/features/auth/presentation/providers/auth_providers.dart';
 import 'package:hooklove/features/drawing/data/drawing_providers.dart';
 import 'package:hooklove/features/drawing/domain/canvas_state.dart';
@@ -34,12 +32,9 @@ class CanvasController extends StateNotifier<CanvasState> {
   final String _userId;
   final String _partnerId;
   final String _partnerName;
-  StreamSubscription? _strokeSubscription;
   StreamSubscription? _presenceSubscription;
-  Timer? _throttleTimer;
   String? _currentStrokeId;
   List<Map<String, double>> _currentStrokePoints = [];
-  int _pointCount = 0;
 
   CanvasController(
     this._ref,
@@ -53,10 +48,6 @@ class CanvasController extends StateNotifier<CanvasState> {
   }
 
   void _init() {
-    _strokeSubscription = _repository.watchStrokes(_pairId).listen((strokes) {
-      state = state.copyWith(strokes: strokes);
-    });
-
     _presenceSubscription = _repository
         .watchPartnerPresence(_pairId, _partnerId)
         .listen((isDrawing) {
@@ -76,7 +67,7 @@ class CanvasController extends StateNotifier<CanvasState> {
       id: _currentStrokeId!,
       userId: _userId,
       tool: state.selectedTool,
-      color: state.selectedColor.value,
+      color: state.selectedColor.toARGB32(),
       width: state.selectedWidth,
       points: [point],
       timestamp: DateTime.now(),
@@ -86,7 +77,6 @@ class CanvasController extends StateNotifier<CanvasState> {
       currentStrokes: [...state.currentStrokes, stroke],
     );
 
-    _repository.addStroke(_pairId, stroke);
     _repository.setPresence(_pairId, _userId, true);
   }
 
@@ -95,11 +85,6 @@ class CanvasController extends StateNotifier<CanvasState> {
 
     final point = _normalizePoint(localPosition, canvasSize);
     _currentStrokePoints.add(point);
-    _pointCount++;
-
-    if (_pointCount >= AppConstants.syncThrottleMs) {
-      _flushPoints();
-    }
 
     final currentStrokes = [...state.currentStrokes];
     if (currentStrokes.isNotEmpty) {
@@ -109,20 +94,11 @@ class CanvasController extends StateNotifier<CanvasState> {
       );
       state = state.copyWith(currentStrokes: currentStrokes);
     }
-
-    _throttleTimer?.cancel();
-    _throttleTimer = Timer(
-      const Duration(milliseconds: AppConstants.syncThrottleMs),
-      _flushPoints,
-    );
   }
 
   void endStroke() {
-    _flushPoints();
     _currentStrokeId = null;
     _currentStrokePoints = [];
-    _pointCount = 0;
-    _throttleTimer?.cancel();
 
     final completedStrokes = [...state.strokes, ...state.currentStrokes];
     state = state.copyWith(
@@ -133,25 +109,16 @@ class CanvasController extends StateNotifier<CanvasState> {
     _repository.setPresence(_pairId, _userId, false);
   }
 
-  void _flushPoints() {
-    if (_currentStrokeId == null || _currentStrokePoints.isEmpty) return;
-
-    final compressedPoints = StrokeCompressor.removeDuplicates(_currentStrokePoints);
-    final tolerance = 0.005;
-
-    final optimizedPoints = StrokeCompressor.compress(compressedPoints, tolerance);
-
-    for (final point in optimizedPoints) {
-      _repository.addStrokePoint(_pairId, _currentStrokeId!, point);
-    }
-  }
-
   void clearCanvas() {
-    _repository.clearCanvas(_pairId);
     state = state.copyWith(strokes: [], currentStrokes: []);
     _currentStrokeId = null;
     _currentStrokePoints = [];
-    _pointCount = 0;
+  }
+
+  Future<void> sendDrawing() async {
+    if (state.strokes.isEmpty) return;
+    await _repository.sendDrawing(_pairId, _userId, state.strokes);
+    clearCanvas();
   }
 
   void setColor(Color color) {
@@ -175,9 +142,7 @@ class CanvasController extends StateNotifier<CanvasState> {
 
   @override
   void dispose() {
-    _strokeSubscription?.cancel();
     _presenceSubscription?.cancel();
-    _throttleTimer?.cancel();
     super.dispose();
   }
 }

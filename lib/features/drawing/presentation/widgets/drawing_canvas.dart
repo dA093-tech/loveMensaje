@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooklove/features/drawing/domain/canvas_state.dart';
-import 'package:hooklove/features/drawing/domain/stroke.dart';
+
 import 'package:hooklove/features/drawing/presentation/widgets/canvas_painter.dart';
 
 class DrawingCanvas extends StatelessWidget {

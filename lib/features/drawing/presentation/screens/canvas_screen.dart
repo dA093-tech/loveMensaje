@@ -61,7 +61,7 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _buildTopBar(canvasState),
+            _buildTopBar(canvasState, controller),
             Expanded(
               child: DrawingCanvas(
                 state: canvasState,
@@ -98,7 +98,7 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
     );
   }
 
-  Widget _buildTopBar(CanvasState canvasState) {
+  Widget _buildTopBar(CanvasState canvasState, CanvasController controller) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -120,6 +120,21 @@ class _CanvasScreenState extends ConsumerState<CanvasScreen> {
             partnerName: canvasState.partnerName,
           ),
           const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.send_rounded, size: 20),
+            color: canvasState.strokes.isEmpty ? AppColors.textHint : AppColors.primary,
+            onPressed: canvasState.strokes.isEmpty
+                ? null
+                : () {
+                    controller.sendDrawing();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Dibujo enviado'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+          ),
           IconButton(
             icon: Icon(
               _isFullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,

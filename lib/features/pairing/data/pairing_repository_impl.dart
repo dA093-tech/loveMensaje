@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hooklove/core/constants/app_constants.dart';
 import 'package:hooklove/core/errors/app_exception.dart';
 import 'package:hooklove/features/pairing/domain/pair.dart';
@@ -38,7 +39,7 @@ class PairingRepositoryImpl implements PairingRepository {
     final partnerDoc = usersSnapshot.docs.first;
     final partnerId = partnerDoc.id;
 
-    if (partnerId == userId) {
+    if (partnerId == userId && !kDebugMode) {
       throw const AppException('No puedes vincularte contigo mismo');
     }
 
@@ -60,10 +61,12 @@ class PairingRepositoryImpl implements PairingRepository {
       'partnerId': partnerId,
       'pairingCode': null,
     });
-    batch.update(_firestore.collection('users').doc(partnerId), {
-      'partnerId': userId,
-      'pairingCode': null,
-    });
+    if (partnerId != userId) {
+      batch.update(_firestore.collection('users').doc(partnerId), {
+        'partnerId': userId,
+        'pairingCode': null,
+      });
+    }
     await batch.commit();
 
     return Pair(
@@ -123,9 +126,11 @@ class PairingRepositoryImpl implements PairingRepository {
     batch.update(_firestore.collection('users').doc(pair.user1Id), {
       'partnerId': null,
     });
-    batch.update(_firestore.collection('users').doc(pair.user2Id), {
-      'partnerId': null,
-    });
+    if (pair.user1Id != pair.user2Id) {
+      batch.update(_firestore.collection('users').doc(pair.user2Id), {
+        'partnerId': null,
+      });
+    }
     await batch.commit();
   }
 

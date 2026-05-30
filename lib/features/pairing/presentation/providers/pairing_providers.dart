@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hooklove/features/auth/data/auth_providers.dart';
+import 'package:hooklove/features/auth/presentation/providers/auth_providers.dart';
 import 'package:hooklove/features/pairing/data/pairing_providers.dart';
 import 'package:hooklove/features/pairing/domain/pair.dart';
 import 'package:hooklove/features/pairing/domain/pairing_repository.dart';
@@ -14,15 +14,14 @@ final pairingStateProvider = FutureProvider<Pair?>((ref) async {
 final pairingControllerProvider = Provider<PairingController>((ref) {
   final repository = ref.watch(pairingRepositoryProvider);
   final userId = ref.watch(authStateProvider).valueOrNull?.uid;
-  return PairingController(ref, repository, userId ?? '');
+  return PairingController(repository, userId ?? '');
 });
 
 class PairingController {
-  final Ref _ref;
   final PairingRepository _repository;
   final String _userId;
 
-  PairingController(this._ref, this._repository, this._userId);
+  PairingController(this._repository, this._userId);
 
   Future<String> generateCode() async {
     return _repository.generatePairingCode(_userId);

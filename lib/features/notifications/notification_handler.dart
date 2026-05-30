@@ -15,7 +15,6 @@ class NotificationHandler {
       alert: true,
       badge: true,
       sound: true,
-      vibration: true,
     );
 
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
